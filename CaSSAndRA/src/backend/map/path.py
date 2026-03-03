@@ -239,7 +239,7 @@ def calc_cpp(selected_perimeter: Polygon, parameters: PathPlannerCfg, start_pos:
     
     # 2. Settings aus deiner PathPlannerCfg übertragen
     settings.offset = parameters.width
-    settings.angle = math.radians(parameters.angle if parameters.angle else 0)
+    settings.angle = math.radians(angle)
     settings.distanceToBorder = parameters.distancetoborder * parameters.width
     settings.mowArea = parameters.mowarea
     settings.mowBorder = (parameters.mowborder > 0)

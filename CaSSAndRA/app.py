@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#Version:0.301.0 CPP Planner over PIP (New requirements.txt)
+#Version:0.302.0 Fix issue in random angle calculation for CPP planner
 # package imports
 import os
 import sys

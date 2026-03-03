@@ -341,7 +341,7 @@ class RobotInterface:
             self.pendingRequestCnt = 0
             logger.error(f'Map upload failed current map crc does not match rover crc. CRC deviation: {robot.map_crc - current_map.map_crc}')
             return
-        elif (abs(robot.map_crc - current_map.map_crc < 100)) and self.pendingRequestCnt > 1:
+        elif (abs(robot.map_crc - current_map.map_crc < 200)) and self.pendingRequestCnt > 1:
             cmd = sunraycommstack.mow()
             # self.setRobotCmds(cmd)
             robot.last_cmd = cmd
