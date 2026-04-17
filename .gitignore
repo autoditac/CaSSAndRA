@@ -21,3 +21,6 @@ pip-selfcheck.json
 CaSSAndRA.code-workspace
 
 .DS_Store
+
+# Site-specific data (maps, configs, measurements)
+deploy/cassandra-data/

@@ -1,0 +1,11 @@
+.git
+.github
+deploy
+docs
+test
+*.blend1
+*.md
+LICENSE
+config.h
+docker.sh
+docker_entrypoint.sh
