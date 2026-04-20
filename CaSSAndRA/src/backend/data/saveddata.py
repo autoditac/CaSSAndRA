@@ -431,6 +431,36 @@ def rename_perimeter(perimeter_name: str, new_perimeter_name: str) -> None:
     else:
         logger.info('Could not rename perimeter. Perimeter name is already exsist.')
 
+def read_mowpath(map_file_paths, map_name: str) -> None:
+    """Load mowpath (calculated waypoints) from disk if it exists."""
+    try:
+        mowpath_file = map_file_paths.parent / f"mowpath_{map_name}.json"
+        if not mowpath_file.exists():
+            logger.debug(f'No mowpath file found for {map_name}')
+            return
+        mowpath_data = pd.read_json(mowpath_file)
+        if not mowpath_data.empty:
+            current_map.mowpath = mowpath_data
+            logger.info(f'Mowpath loaded successfully from disk ({len(mowpath_data)} points)')
+        else:
+            logger.debug(f'Mowpath file is empty for {map_name}')
+    except Exception as e:
+        logger.debug(f'Could not load mowpath for {map_name}')
+        logger.debug(str(e))
+
+def save_mowpath(mowpath: pd.DataFrame, map_name: str, map_file_paths) -> None:
+    """Save calculated mowpath to disk for persistence across restarts."""
+    if mowpath is None or mowpath.empty:
+        logger.debug(f'Mowpath is empty, nothing to save for {map_name}')
+        return
+    try:
+        mowpath_file = map_file_paths.parent / f"mowpath_{map_name}.json"
+        mowpath.to_json(mowpath_file, indent=2, date_format='iso')
+        logger.info(f'Mowpath data successfully saved to disk ({len(mowpath)} points)')
+    except Exception as e:
+        logger.warning(f'Could not save mowpath for {map_name}')
+        logger.debug(str(e))
+
 def save_task(task_arr: pd.DataFrame, task_parameter_arr: pd.DataFrame, task: pd.DataFrame, task_parameters: pd.DataFrame, task_name: str) -> None:
     if task_name is None:
         logger.info('Could not save task. Task name is not valid')

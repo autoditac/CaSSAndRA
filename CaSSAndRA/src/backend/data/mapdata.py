@@ -246,6 +246,12 @@ class Perimeter:
         self.previewId = str(uuid.uuid4())
         self.mowpathId = str(uuid.uuid4())
         self.obstaclesId = str(uuid.uuid4())
+        # Try to load persisted mowpath from previous session
+        try:
+            from . import saveddata
+            saveddata.read_mowpath(saveddata.file_paths.tmp, self.name)
+        except:
+            pass  # If file doesn't exist, that's fine — mowpath starts empty
     
     def calc_route_preview(self, route: list) -> None:
         self.preview = pd.DataFrame(route)
@@ -257,6 +263,12 @@ class Perimeter:
         self.mowpath = self.preview
         self.mowpath['type'] = 'way'
         self.mowpathId = str(uuid.uuid4())
+        # Persist the calculated mowpath to disk
+        try:
+            from . import saveddata
+            saveddata.save_mowpath(self.mowpath, self.name, saveddata.file_paths.tmp)
+        except:
+            pass  # Log warning but don't fail — mowing can proceed
     
     def reset_route_mowpath(self) -> None:
         self.mowpath = robot.current_task
