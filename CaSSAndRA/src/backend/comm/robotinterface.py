@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 import pandas as pd
 
-from ..data.mapdata import current_map
+from ..data.mapdata import current_map, calculate_sunray_map_crc
 from ..data.roverdata import robot
 from ..data import roverdata, calceddata
 from . import sunraycommstack
@@ -61,10 +61,8 @@ class RobotInterface:
         if not dockpath:
             dataForCrc = dataForCrc[dataForCrc['type'] != 'dockpoints']
         dataForCrc = pd.concat([dataForCrc, way], ignore_index=True)
-        mapCRCx = dataForCrc['X']*100 
-        mapCRCy = dataForCrc['Y']*100
-        current_map.map_crc = int(mapCRCx.sum() + mapCRCy.sum())
-        logger.debug('Map crc deivation: '+str(abs(current_map.map_crc - robot.map_crc)))
+        current_map.map_crc = calculate_sunray_map_crc(dataForCrc)
+        logger.debug('Map crc deviation: '+str(abs(current_map.map_crc - robot.map_crc)))
     
     def _onPropsMessage(self, props_df: pd.DataFrame) -> None:
         if not props_df.empty:
@@ -341,7 +339,7 @@ class RobotInterface:
             self.pendingRequestCnt = 0
             logger.error(f'Map upload failed current map crc does not match rover crc. CRC deviation: {robot.map_crc - current_map.map_crc}')
             return
-        elif (abs(robot.map_crc - current_map.map_crc < 200)) and self.pendingRequestCnt > 1:
+        elif (abs(robot.map_crc - current_map.map_crc) < 200) and self.pendingRequestCnt > 1:
             cmd = sunraycommstack.mow()
             # self.setRobotCmds(cmd)
             robot.last_cmd = cmd
