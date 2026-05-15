@@ -18,6 +18,15 @@ from .roverdata import robot
 from .cfgdata import PathPlannerCfg, pathplannercfg, rovercfg
 from .. map import map
 
+
+def calculate_sunray_map_crc(data: pd.DataFrame) -> int:
+    if data.empty:
+        return 0
+    coords = data[['X', 'Y']].copy().round(2)
+    point_crc = (coords['X'] * 100).astype(int) + (coords['Y'] * 100).astype(int)
+    return int(point_crc.sum())
+
+
 @dataclass
 class Perimeter:
     name: str = ''
@@ -221,9 +230,7 @@ class Perimeter:
     
     def create_map_crc(self) -> None:
         dataForCrc = current_map.perimeter[current_map.perimeter['type'] != 'search wire']
-        mapCRCx = dataForCrc['X']*100 
-        mapCRCy = dataForCrc['Y']*100
-        self.map_crc = int(mapCRCx.sum() + mapCRCy.sum())
+        self.map_crc = calculate_sunray_map_crc(dataForCrc)
     
     def check_direct_way(self, start, end) -> bool:
         way = LineString([start, end])

@@ -138,17 +138,18 @@ def update(n_intervals: int,
         mapping_maps.build = pd.DataFrame()
         mapping_maps.selected_point = pd.DataFrame()
     elif context == ids.BUTTONMOVEPOINTS and not bmp_state:
-        if 'shapes' in fig_state['layout']:
+        layout = fig_state.get('layout', {}) if fig_state else {}
+        if 'shapes' in layout:
             mapping_maps.build = pd.DataFrame()
-            for i, shape in enumerate(fig_state['layout']['shapes']):
-                data_for_figure = mapping_maps.csvtocartesian(fig_state['layout']['shapes'][i]['path'])
-                data_for_figure['type'] = fig_state['layout']['shapes'][i]['name']
+            for shape in layout['shapes']:
+                data_for_figure = mapping_maps.csvtocartesian(shape['path'])
+                data_for_figure['type'] = shape['name']
                 mapping_maps.build = pd.concat([mapping_maps.build, data_for_figure], ignore_index=True)
             mapping_maps.figure_action('recreate')
             #avoiding of adjustment of last dockpoint, if move tool was used on dockpoints
             mapping_maps.dockpoints = mapping_maps.build[mapping_maps.build['type'] == 'dockpoints']
             mapping_maps.legacy_figure = pd.DataFrame()
-        del fig_state['layout']['shapes']
+        layout.pop('shapes', None)
 
 
     #Check which dropdown was triggered
