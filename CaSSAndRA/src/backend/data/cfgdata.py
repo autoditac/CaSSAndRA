@@ -38,6 +38,35 @@ class CommCfg:
     telegram_chat_id: int = None
     pushover_token: str = None
     pushover_user: str = None
+
+    def _env_str(self, name: str, current):
+        value = os.getenv(name)
+        if value is None:
+            return current
+        return value
+
+    def _env_optional_str(self, name: str, current):
+        value = os.getenv(name)
+        if value is None:
+            return current
+        if value.lower() in ('', 'none', 'null', 'off', 'disabled'):
+            return None
+        return value
+
+    def _env_int(self, name: str, current: int) -> int:
+        value = os.getenv(name)
+        if value is None or value == '':
+            return current
+        return int(value)
+
+    def _apply_env_overrides(self) -> None:
+        self.api = self._env_optional_str('CASSANDRA_API', self.api)
+        self.api_mqtt_client_id = self._env_str('CASSANDRA_API_MQTT_CLIENT_ID', self.api_mqtt_client_id)
+        self.api_mqtt_username = self._env_str('CASSANDRA_API_MQTT_USERNAME', self.api_mqtt_username)
+        self.api_mqtt_pass = self._env_str('CASSANDRA_API_MQTT_PASSWORD', self.api_mqtt_pass)
+        self.api_mqtt_server = self._env_str('CASSANDRA_API_MQTT_SERVER', self.api_mqtt_server)
+        self.api_mqtt_port = self._env_int('CASSANDRA_API_MQTT_PORT', self.api_mqtt_port)
+        self.api_mqtt_cassandra_server_name = self._env_str('CASSANDRA_API_MQTT_SERVER_NAME', self.api_mqtt_cassandra_server_name)
     
     def read_commcfg(self) -> dict:
         try:
@@ -68,6 +97,7 @@ class CommCfg:
                 self.telegram_chat_id = commcfg_from_file['TELEGRAM'][1]['CHAT_ID']
                 self.pushover_token = commcfg_from_file['PUSHOVER'][0]['TOKEN']
                 self.pushover_user = commcfg_from_file['PUSHOVER'][1]['USER']
+                self._apply_env_overrides()
                 return commcfg_from_file
         except Exception as e:
             logger.error('Could not read commcfg.json. Missing commcfg.json. Go with standard values')
@@ -76,6 +106,7 @@ class CommCfg:
             with open (paths.file_paths.user.comm) as f: 
                 commcfg_from_file = json.load(f)
                 f.close()
+                self._apply_env_overrides()
                 return commcfg_from_file
         
     def save_commcfg(self) -> None:
@@ -273,7 +304,9 @@ class PathPlannerCfg:
             self.mowborder = pathplannercfg_from_file['mowborder']
             self.mowexclusion = pathplannercfg_from_file['mowexclusion']
             self.mowborderccw = pathplannercfg_from_file['mowborderccw']
-            self.usecppplanner = pathplannercfg_from_file['usecppplanner']
+            self.usecppplanner = pathplannercfg_from_file.get('usecppplanner', self.usecppplanner)
+            if 'usecppplanner' not in pathplannercfg_from_file:
+                self.save_pathplannercfg()
         except Exception as e:
             logger.error('Could not read pathplannercfg.json. Data are invalid. Go with standard values')
             res = self.save_pathplannercfg()

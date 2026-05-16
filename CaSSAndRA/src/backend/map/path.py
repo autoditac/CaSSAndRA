@@ -26,6 +26,9 @@ from ..data.mapdata import current_map
 from ..data.cfgdata import PathPlannerCfg, pathplannercfgtasktmp, pathplannercfg
 from ..data.roverdata import robot
 
+def use_cpp_planner(parameters: PathPlannerCfg) -> bool:
+    return CPP_PLANNER_AVAILABLE and bool(getattr(parameters, 'usecppplanner', pathplannercfg.usecppplanner))
+
 def calc_task(substasks: pd.DataFrame, parameters: pd.DataFrame) -> None:
     tasks_order = list(substasks['name'].unique())
     logger.info(f'Create route from task. Tasks order: {tasks_order}')
@@ -62,8 +65,11 @@ def calc_task(substasks: pd.DataFrame, parameters: pd.DataFrame) -> None:
         if subtask_nr == 0:
             route = calc_simple(selected_perimeter, pathplannercfgtasktmp)
         else:
-            if (CPP_PLANNER_AVAILABLE and pathplannercfg.usecppplanner):
+            if use_cpp_planner(pathplannercfgtasktmp):
                 route_tmp = calc_cpp(selected_perimeter, pathplannercfgtasktmp, route[-1])
+                if route_tmp == []:
+                    logger.error('Backend: Route calculation from task could not be finished')
+                    return
                 del route[-1]
                 route.extend(route_tmp)
             else:
@@ -98,7 +104,7 @@ def calc_simple(selected_perimeter: Polygon, parameters: PathPlannerCfg) -> list
     use_cassandra_pathfinder = False
     start_pos = calc_start_pos()
 
-    if (CPP_PLANNER_AVAILABLE and pathplannercfg.usecppplanner):
+    if use_cpp_planner(parameters):
         route_tmp = calc_cpp(selected_perimeter, parameters, start_pos)
     else:
         route_tmp = calc(selected_perimeter, parameters, start_pos)

@@ -10,6 +10,20 @@ CaSSAndRA is a Python server application that allows you to control the Ardumowe
 
 [![introduction](https://img.youtube.com/vi/ZS4DnEkz1dI/0.jpg)](https://www.youtube.com/watch?v=ZS4DnEkz1dI)
 
+## Alfred container notes
+
+The Alfred container image installs the new C++ path planner via the PyPI package
+`coverage-path-planner`; Python code continues to import it as
+`coverage_path_planner`. The planner can be enabled with `usecppplanner` in
+`pathplannercfg.json` and falls back to the legacy Python planner if the module is
+not available.
+
+For CaSSAndRA Native, the MQTT API can be enabled without editing
+`commcfg.json` by setting these environment variables before starting the
+container: `CASSANDRA_API=MQTT`, `CASSANDRA_API_MQTT_SERVER`,
+`CASSANDRA_API_MQTT_PORT`, optional username/password variables, and
+`CASSANDRA_API_MQTT_SERVER_NAME` for the rover topic prefix.
+
 ## Important (Please read before installing):
 Installation and use of the app is at your own risk. I assume no liability for any damage caused by using the app. This is my hobby project, which doesn't have to work for you. Your robot must be equipped with an emergency stop switch. When operating the robot from the app, please always keep visual contact with the robot and in the event of unexpected behavior switch it off immediately using the emergency stop switch. If you agree, then proceed with the installation.
 
