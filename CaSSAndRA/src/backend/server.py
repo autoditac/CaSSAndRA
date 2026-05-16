@@ -353,7 +353,8 @@ class Server:
             logger.info('Selected API is MQTT')
             topics = {'TOPIC_API_CMD':'api_cmd'}
             cfg = cfg = dict(CLIENT_ID=cfgdata.commcfg.api_mqtt_client_id, USERNAME=cfgdata.commcfg.api_mqtt_username, PASSWORD=cfgdata.commcfg.api_mqtt_pass,
-                             MQTT_SERVER=cfgdata.commcfg.api_mqtt_server, PORT=cfgdata.commcfg.api_mqtt_port, NAME=cfgdata.commcfg.api_mqtt_cassandra_server_name)
+                             MQTT_SERVER=cfgdata.commcfg.api_mqtt_server, PORT=cfgdata.commcfg.api_mqtt_port, NAME=cfgdata.commcfg.api_mqtt_cassandra_server_name,
+                             USE_TLS=cfgdata.commcfg.api_mqtt_use_tls)
             mqttapi.create(cfg, topics)
             mqttapi.connect()
             connection_start = datetime.now()

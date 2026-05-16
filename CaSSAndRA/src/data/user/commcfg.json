@@ -55,6 +55,9 @@
         },
         {
             "API_SERVER_NAME": "myCaSSAndRA"
+        },
+        {
+            "USE_TLS": false
         }
     ],
     "MESSAGE_SERVICE": null,

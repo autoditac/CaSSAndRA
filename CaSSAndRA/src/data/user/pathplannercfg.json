@@ -6,5 +6,6 @@
     "mowarea": true,
     "mowborder": 0,
     "mowexclusion": true,
-    "mowborderccw": true
+    "mowborderccw": true,
+    "usecppplanner": true
 }
