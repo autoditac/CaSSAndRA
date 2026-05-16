@@ -60,6 +60,7 @@ class SettingsTopic:
             self.settingsstate['apiMqttServer'] = commcfg.api_mqtt_server
             self.settingsstate['apiMqttCassandraServerName'] = commcfg.api_mqtt_cassandra_server_name
             self.settingsstate['apiMqttPort'] = commcfg.api_mqtt_port
+            self.settingsstate['apiMqttUseTls'] = commcfg.api_mqtt_use_tls
             self.settingsstate['messageServiceType'] = commcfg.message_service
             self.settingsstate['telegramApiToken'] = commcfg.telegram_token
             self.settingsstate['telegramChatId'] = commcfg.telegram_chat_id
@@ -121,6 +122,8 @@ class SettingsTopic:
                     commcfg.api_mqtt_cassandra_server_name = value[key]
                 if key == 'apiMqttPort':
                     commcfg.api_mqtt_port = value[key]
+                if key == 'apiMqttUseTls':
+                    commcfg.api_mqtt_use_tls = commcfg._as_bool(value[key], commcfg.api_mqtt_use_tls)
                 if key == 'messageServiceType':
                     if value[key] == 'telegram':
                         commcfg.message_service = 'Telegram'

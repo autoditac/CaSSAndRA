@@ -33,6 +33,7 @@ class CommCfg:
     api_mqtt_server: str = '192.168.1.1'
     api_mqtt_port: int = 1883
     api_mqtt_cassandra_server_name:str = 'myCaSSAndRA'
+    api_mqtt_use_tls: bool = False
     message_service: str = None
     telegram_token: str = None
     telegram_chat_id: int = None
@@ -59,6 +60,26 @@ class CommCfg:
             return current
         return int(value)
 
+    def _as_bool(self, value, current: bool = False) -> bool:
+        if value is None:
+            return current
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, (int, float)):
+            return value != 0
+        normalized = str(value).strip().lower()
+        if normalized in ('1', 'true', 'yes', 'on', 'enabled'):
+            return True
+        if normalized in ('0', 'false', 'no', 'off', 'disabled', 'none', 'null', ''):
+            return False
+        raise ValueError(f'Invalid boolean value: {value}')
+
+    def _env_bool(self, name: str, current: bool = False) -> bool:
+        value = os.getenv(name)
+        if value is None:
+            return current
+        return self._as_bool(value, current)
+
     def _apply_env_overrides(self) -> None:
         self.api = self._env_optional_str('CASSANDRA_API', self.api)
         self.api_mqtt_client_id = self._env_str('CASSANDRA_API_MQTT_CLIENT_ID', self.api_mqtt_client_id)
@@ -67,6 +88,7 @@ class CommCfg:
         self.api_mqtt_server = self._env_str('CASSANDRA_API_MQTT_SERVER', self.api_mqtt_server)
         self.api_mqtt_port = self._env_int('CASSANDRA_API_MQTT_PORT', self.api_mqtt_port)
         self.api_mqtt_cassandra_server_name = self._env_str('CASSANDRA_API_MQTT_SERVER_NAME', self.api_mqtt_cassandra_server_name)
+        self.api_mqtt_use_tls = self._env_bool('CASSANDRA_API_MQTT_USE_TLS', self.api_mqtt_use_tls)
     
     def read_commcfg(self) -> dict:
         try:
@@ -92,6 +114,8 @@ class CommCfg:
                 self.api_mqtt_server = commcfg_from_file['MQTT_API'][3]['MQTT_SERVER']
                 self.api_mqtt_port = commcfg_from_file['MQTT_API'][4]['PORT'] 
                 self.api_mqtt_cassandra_server_name = commcfg_from_file['MQTT_API'][5]['API_SERVER_NAME']
+                mqtt_api = {key: value for item in commcfg_from_file.get('MQTT_API', []) for key, value in item.items()}
+                self.api_mqtt_use_tls = self._as_bool(mqtt_api.get('USE_TLS'), False)
                 self.message_service = commcfg_from_file['MESSAGE_SERVICE']
                 self.telegram_token = commcfg_from_file['TELEGRAM'][0]['TOKEN']
                 self.telegram_chat_id = commcfg_from_file['TELEGRAM'][1]['CHAT_ID']
@@ -132,7 +156,8 @@ class CommCfg:
                                 {'PASSWORD': self.api_mqtt_pass},
                                 {'MQTT_SERVER': self.api_mqtt_server},
                                 {'PORT': self.api_mqtt_port},
-                                {'API_SERVER_NAME': self.api_mqtt_cassandra_server_name}
+                                {'API_SERVER_NAME': self.api_mqtt_cassandra_server_name},
+                                {'USE_TLS': self.api_mqtt_use_tls}
                                 ]
             new_data['MESSAGE_SERVICE'] = self.message_service
             new_data['TELEGRAM'] = [{'TOKEN': self.telegram_token},

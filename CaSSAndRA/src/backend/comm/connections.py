@@ -4,6 +4,7 @@ logger = logging.getLogger(__name__)
 #package imports
 import time
 import json
+import ssl
 import paho.mqtt.client as mqtt
 import requests
 import serial
@@ -26,6 +27,7 @@ class MQTT:
     mqtt_server: str = None
     mqtt_port: int = None
     mqtt_mower_name: str = None
+    mqtt_use_tls: bool = False
     mqtt_topics: dict = field(default_factory=dict)
     sub_ids: dict = field(default_factory=dict)
     buffer_api: list = field(default_factory=list)
@@ -37,10 +39,14 @@ class MQTT:
         self.mqtt_server = cfg['MQTT_SERVER']
         self.mqtt_port = cfg['PORT']
         self.mqtt_mower_name = cfg['NAME']
+        self.mqtt_use_tls = cfg.get('USE_TLS', False)
         self.mqtt_topics = topics
         self.client = mqtt.Client(self.mqtt_client_id + str(random.randint(1, 1000)))
         self.client.connection_flag = False
         self.client.username_pw_set(self.mqtt_username, self.mqtt_pass)
+        if self.mqtt_use_tls:
+            self.client.tls_set(cert_reqs=ssl.CERT_REQUIRED)
+            self.client.tls_insecure_set(False)
     
     def disconnect(self) -> None:
         logger.info('Disconnecting')
