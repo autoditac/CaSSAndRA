@@ -58,7 +58,11 @@ class CommCfg:
         value = os.getenv(name)
         if value is None or value == '':
             return current
-        return int(value)
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            logger.warning('Ignoring invalid integer environment override %s=%s', name, value)
+            return current
 
     def _as_bool(self, value, current: bool = False) -> bool:
         if value is None:
@@ -78,7 +82,11 @@ class CommCfg:
         value = os.getenv(name)
         if value is None:
             return current
-        return self._as_bool(value, current)
+        try:
+            return self._as_bool(value, current)
+        except ValueError:
+            logger.warning('Ignoring invalid boolean environment override %s=%s', name, value)
+            return current
 
     def _apply_env_overrides(self) -> None:
         self.api = self._env_optional_str('CASSANDRA_API', self.api)
@@ -359,14 +367,21 @@ class PathPlannerCfg:
             return -1
 
     def df_to_obj(self, parameters: pd.DataFrame) -> None:
-        self.pattern = parameters.iloc[0]['pattern']
-        self.width = parameters.iloc[0]['width']
-        self.angle = parameters.iloc[0]['angle']
-        self.distancetoborder = parameters.iloc[0]['distancetoborder']
-        self.mowarea = parameters.iloc[0]['mowarea']
-        self.mowborder = parameters.iloc[0]['mowborder']
-        self.mowexclusion = parameters.iloc[0]['mowexclusion']
-        self.mowborderccw = parameters.iloc[0]['mowborderccw']
+        row = parameters.iloc[0]
+        self.pattern = row['pattern']
+        self.width = row['width']
+        self.angle = row['angle']
+        self.distancetoborder = row['distancetoborder']
+        self.mowarea = row['mowarea']
+        self.mowborder = row['mowborder']
+        self.mowexclusion = row['mowexclusion']
+        self.mowborderccw = row['mowborderccw']
+        if 'usecppplanner' in parameters:
+            usecppplanner = row['usecppplanner']
+            if isinstance(usecppplanner, str):
+                self.usecppplanner = usecppplanner.strip().lower() in ('1', 'true', 'yes', 'on', 'enabled')
+            else:
+                self.usecppplanner = bool(usecppplanner)
     
     def read_pathplannercfg_from_api(self, parameters: dict) -> None:
         try:

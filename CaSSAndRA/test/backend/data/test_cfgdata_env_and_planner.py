@@ -62,15 +62,15 @@ def _commcfg_payload():
     }
 
 
-def _set_user_paths(tmp_path, **files):
+def _set_user_paths(monkeypatch, **files):
     user = SimpleNamespace(**{name: str(path) for name, path in files.items()})
-    paths.file_paths = SimpleNamespace(user=user)
+    monkeypatch.setattr(paths, 'file_paths', SimpleNamespace(user=user))
 
 
 def test_commcfg_mqtt_api_environment_overrides(tmp_path, monkeypatch):
     commcfg_path = tmp_path / "commcfg.json"
     commcfg_path.write_text(json.dumps(_commcfg_payload()))
-    _set_user_paths(tmp_path, comm=commcfg_path)
+    _set_user_paths(monkeypatch, comm=commcfg_path)
 
     monkeypatch.setenv("CASSANDRA_API", "MQTT")
     monkeypatch.setenv("CASSANDRA_API_MQTT_CLIENT_ID", "cassandra-alfred")
@@ -94,10 +94,10 @@ def test_commcfg_mqtt_api_environment_overrides(tmp_path, monkeypatch):
     assert cfg.api_mqtt_use_tls is True
 
 
-def test_commcfg_mqtt_api_use_tls_defaults_false_for_legacy_files(tmp_path):
+def test_commcfg_mqtt_api_use_tls_defaults_false_for_legacy_files(tmp_path, monkeypatch):
     commcfg_path = tmp_path / "commcfg.json"
     commcfg_path.write_text(json.dumps(_commcfg_payload()))
-    _set_user_paths(tmp_path, comm=commcfg_path)
+    _set_user_paths(monkeypatch, comm=commcfg_path)
 
     cfg = CommCfg()
     cfg.read_commcfg()
@@ -105,15 +105,30 @@ def test_commcfg_mqtt_api_use_tls_defaults_false_for_legacy_files(tmp_path):
     assert cfg.api_mqtt_use_tls is False
 
 
-def test_commcfg_save_persists_mqtt_api_use_tls(tmp_path):
+def test_commcfg_save_persists_mqtt_api_use_tls(tmp_path, monkeypatch):
     commcfg_path = tmp_path / "commcfg.json"
-    _set_user_paths(tmp_path, comm=commcfg_path)
+    _set_user_paths(monkeypatch, comm=commcfg_path)
 
     cfg = CommCfg(api_mqtt_use_tls=True)
     cfg.save_commcfg()
 
     saved = json.loads(commcfg_path.read_text())
     assert saved["MQTT_API"][6] == {"USE_TLS": True}
+
+
+def test_commcfg_invalid_env_overrides_keep_existing_values(tmp_path, monkeypatch):
+    commcfg_path = tmp_path / "commcfg.json"
+    commcfg_path.write_text(json.dumps(_commcfg_payload()))
+    _set_user_paths(monkeypatch, comm=commcfg_path)
+
+    monkeypatch.setenv("CASSANDRA_API_MQTT_PORT", "not-a-port")
+    monkeypatch.setenv("CASSANDRA_API_MQTT_USE_TLS", "maybe")
+
+    cfg = CommCfg()
+    cfg.read_commcfg()
+
+    assert cfg.api_mqtt_port == 1883
+    assert cfg.api_mqtt_use_tls is False
 
 
 def test_mqtt_create_configures_tls_when_requested(monkeypatch):
@@ -188,7 +203,39 @@ def test_mqtt_create_configures_tls_when_requested(monkeypatch):
     assert client.tls_insecure is False
 
 
-def test_pathplannercfg_defaults_cpp_planner_for_legacy_files(tmp_path):
+def test_pathplannercfg_df_to_obj_reads_per_task_usecppplanner():
+    class FakeIloc:
+        def __init__(self, row):
+            self._row = row
+
+        def __getitem__(self, _index):
+            return self._row
+
+    class FakeParameters:
+        def __init__(self, row):
+            self._row = row
+            self.iloc = FakeIloc(row)
+
+        def __contains__(self, key):
+            return key in self._row
+
+    cfg = PathPlannerCfg(usecppplanner=True)
+    cfg.df_to_obj(FakeParameters({
+        "pattern": "lines",
+        "width": 0.18,
+        "angle": 0,
+        "distancetoborder": 2,
+        "mowarea": True,
+        "mowborder": 0,
+        "mowexclusion": True,
+        "mowborderccw": True,
+        "usecppplanner": False,
+    }))
+
+    assert cfg.usecppplanner is False
+
+
+def test_pathplannercfg_defaults_cpp_planner_for_legacy_files(tmp_path, monkeypatch):
     pathplannercfg_path = tmp_path / "pathplannercfg.json"
     pathplannercfg_path.write_text(json.dumps({
         "pattern": "lines",
@@ -200,7 +247,7 @@ def test_pathplannercfg_defaults_cpp_planner_for_legacy_files(tmp_path):
         "mowexclusion": True,
         "mowborderccw": True,
     }))
-    _set_user_paths(tmp_path, pathplannercfg=pathplannercfg_path)
+    _set_user_paths(monkeypatch, pathplannercfg=pathplannercfg_path)
 
     cfg = PathPlannerCfg()
     cfg.read_pathplannercfg()

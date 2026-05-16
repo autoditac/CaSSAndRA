@@ -20,9 +20,11 @@ not available.
 
 For CaSSAndRA Native, the MQTT API can be enabled without editing
 `commcfg.json` by setting these environment variables before starting the
-container: `CASSANDRA_API=MQTT`, `CASSANDRA_API_MQTT_SERVER`,
-`CASSANDRA_API_MQTT_PORT`, optional username/password variables, and
-`CASSANDRA_API_MQTT_SERVER_NAME` for the rover topic prefix.
+container: `CASSANDRA_API=MQTT`, `CASSANDRA_API_MQTT_CLIENT_ID`,
+`CASSANDRA_API_MQTT_USERNAME`, `CASSANDRA_API_MQTT_PASSWORD`,
+`CASSANDRA_API_MQTT_SERVER`, `CASSANDRA_API_MQTT_PORT`,
+`CASSANDRA_API_MQTT_SERVER_NAME` for the rover topic prefix, and
+`CASSANDRA_API_MQTT_USE_TLS` for certificate-verified TLS broker connections.
 
 ## Important (Please read before installing):
 Installation and use of the app is at your own risk. I assume no liability for any damage caused by using the app. This is my hobby project, which doesn't have to work for you. Your robot must be equipped with an emergency stop switch. When operating the robot from the app, please always keep visual contact with the robot and in the event of unexpected behavior switch it off immediately using the emergency stop switch. If you agree, then proceed with the installation.

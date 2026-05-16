@@ -23,11 +23,11 @@ import random, math
 from . import map, cutedge, lines, rings
 from . pathfinder import pathfinder
 from ..data.mapdata import current_map
-from ..data.cfgdata import PathPlannerCfg, pathplannercfgtasktmp, pathplannercfg
+from ..data.cfgdata import PathPlannerCfg, pathplannercfgtasktmp
 from ..data.roverdata import robot
 
 def use_cpp_planner(parameters: PathPlannerCfg) -> bool:
-    return CPP_PLANNER_AVAILABLE and bool(getattr(parameters, 'usecppplanner', pathplannercfg.usecppplanner))
+    return CPP_PLANNER_AVAILABLE and bool(parameters.usecppplanner)
 
 def calc_task(substasks: pd.DataFrame, parameters: pd.DataFrame) -> None:
     tasks_order = list(substasks['name'].unique())
